@@ -28,4 +28,19 @@ CHIP Memory {
 
     PARTS:
     // Put your code here:
+    
+    // RAM      : 0000 0x000 - 0011 0xFFF
+    // Screen   : 0100 0x000 - 0101 0xFFF
+    // Keyboard : 0110 0x000
+
+    DMux4Way(in=load, sel=address[13..14], a=ramaddr0, b=ramaddr1, c=scrnAddr, d=kybdAddr);
+    Or(a=ramaddr0, b=ramaddr1, out=ramAddr);
+
+    // Built in RAM16K input address bus size is 14 bit
+    RAM16K(in=in, load=ramAddr, address=address[0..13], out=ramOut);     
+    // Built in Screen input address bus size is 13 bit
+    Screen(in=in, load=scrnAddr, address=address[0..12], out=scrnOut);
+    Keyboard(out=kbdOut);
+
+    Mux4Way16(a=ramOut, b=ramOut, c=scrnOut, d=kbdOut, sel=address[13..14], out=out);
 }

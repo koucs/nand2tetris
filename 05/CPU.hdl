@@ -40,4 +40,71 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+
+    // instruction[15] : 0->A命令 1->D命令
+    DMux(in=true, sel=instruction[15], a=instA, b=instC); 
+    // C命令 で　d1 (instruction[5]) == 1 の場合は ARegister に書き込み
+    And(a=instC, b=instruction[5], out=instCAndARegWrite);
+
+    // どちらかの場合は更新
+    Or(a=instA, b=instCAndARegWrite, out=writeA);
+
+    // ARegister向けの input を決定
+    // instruction[15] == 1 だった場合は instruction の値を write
+    Mux16(a=outALU, b=instruction, sel=instA, out=inA);
+
+    // A Register 更新
+    ARegister(
+        in=inA, 
+        load=writeA, 
+        out=outA,
+        out[0..14]=addressM);
+
+    // a (instruction[12] == 0) inALUy = RegisterA
+    // a (instruction[12] == 1) inALUy = inM
+    Mux16(a=outA, b=inM, sel=instruction[12], out=inALUy);
+
+    // C命令 で　d1 (instruction[4]) == 1 の場合は DRegister に書き込み
+    And(a=instC, b=instruction[4], out=instCAndDRegWrite);
+    DRegister(
+        in=outALU, 
+        load=instCAndDRegWrite, 
+        out=outD);
+
+    ALU(
+        x=outD, 
+        y=inALUy, 
+        zx=instruction[11], 
+        nx=instruction[10], 
+        zy=instruction[9], 
+        ny=instruction[8], 
+        f=instruction[7], 
+        no=instruction[6], 
+        out=outM, 
+        out=outALU, 
+        zr=zr, 
+        ng=ng);
+
+    // C命令 で　d1 (instruction[3]) == 1 の場合は writeM = 1    
+    And(a=instC, b=instruction[3], out=writeM);
+
+    // ProgramCounter の更新
+    // 効率的な書き方が浮かばなかった
+    // https://github.com/havivha/Nand2Tetris/blob/master/05/CPU.hdl#L65
+    Or(a=zr, b=ng, out=notPos);
+    Not(in=notPos, out=pos);
+    And(a=instruction[1], b=zr, out=jeq);
+    And(a=instruction[2], b=ng, out=jlt);
+    And(a=instruction[0], b=pos, out=jgt);
+
+    Or(a=jgt, b=jeq, out=jge);
+    Or(a=jlt, b=jge, out=jumpA);
+    And(a=instC, b=jumpA, out=loadPC);
+    Not(in=loadPC, out=incPC);
+    PC(
+        in=outA, 
+        load=loadPC, 
+        inc=incPC, 
+        reset=reset, 
+        out[0..14]=pc);
 }
