@@ -9,13 +9,11 @@
 // the screen should remain fully black as long as the key is pressed. 
 // When no key is pressed, the program clears the screen, i.e. writes
 // "white" in every pixel;
-// the screen should remain fully clear as long as no key is pressed.
-
 // https://github.com/havivha/Nand2Tetris/blob/master/04/fill/Fill.asm
 
     @status
-    M=-1        // status=0xFFFF
-    D=0         // Argument - what to set screen bits to
+    M=-1        // [初期] status=0xFFFF
+    D=0         // SETSCREEN 向けの パラメータ
     @SETSCREEN
     0;JMP
 
@@ -23,28 +21,28 @@
     @KBD
     D=M         // D = current keyboard character
     @SETSCREEN
-    D;JEQ       // If no key, set screen to zeroes (white)
-    D=-1        // If key pressed, set screen to all 1 bits (black)
+    D;JEQ       // D==0 の場合、 D=0 でそのまま @SETSCREEN 下に jump (white)
+    D=-1        // D!=0 の場合、 D=-1 で @SETSCREEN 下に jump (black)
     
-(SETSCREEN)     // Set D=new status before jumping here
-    @ARG
-    M=D         // Save new status arg
-    @status     // FFFF=black, 0=white - status of entire screen
-    D=D-M       // D=newstatus-status
+(SETSCREEN)     // Dレジスタの値で更新 (Set D=new status before jumping here)
+    @ARG        // = @R2
+    M=D         // Dレジスタの値を @ARG に退避
+    @status     
+    D=D-M       // D = newstatus - status (0-0=0 / FFFF-FFFF=0 で 0 となったら同じ値である)
     @LOOP
-    D;JEQ        // Do nothing if new status == old status
+    D;JEQ       // newstatus == status(@status) の場合は何もせず　@LOOP へ
     
     @ARG
-    D=M
+    D=M         // 退避させていた Dレジスタの値を D レジスタへ
     @status
     M=D         // status = ARG
     
     @SCREEN
     D=A         // D=Screen address
     @8192
-    D=D+A       // D=Byte just past last screen address
+    D=D+A       // D=Screen address (last)
     @i
-    M=D         // i=SCREEN address
+    M=D         // i=SCREEN address (last)
     
 (SETLOOP)    
     @i
@@ -56,7 +54,7 @@
     @status
     D=M         // D=status
     @i
-    A=M         // Indirect
-    M=D         // M[current screen address]=status
+    A=M         // A = i (=SCREEN address)
+    M=D         // M[SCREEN ADRESS]=status
     @SETLOOP
     0;JMP
