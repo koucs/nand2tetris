@@ -1,11 +1,9 @@
 import os
-from enum import Enum
+import re
+from constants import *
 
-
-class Command(Enum):
-    A_COMMAND = 1
-    C_COMMAND = 2
-    L_COMMAND = 3
+A_COMMAND_REX = re.compile(r'^@([_.$:a-zA-Z0-9]+)')
+L_COMMAND_REX = re.compile(r'^\(([_.$:a-zA-Z0-9]+)\)$')
 
 
 class Parser:
@@ -22,15 +20,13 @@ class Parser:
         # ref: https://stackoverflow.com/questions/3845423/remove-empty-strings-from-a-list-of-strings
         self.lines = list(filter(None, self.lines))
 
-        self.in_dir = os.path.dirname(path)  # path/to
-        self.in_name = os.path.basename(path)  # *.asm
-        self.out_name = os.path.splitext(self.in_name)[0] + ".hack"  # *.hack
         self.last = len(self.lines)
 
         # current index
         self.index = 0
         # current command
         self.command = None
+        self._command_type = None
         # current symbol
         self.symbol = None
 
@@ -41,9 +37,20 @@ class Parser:
         self.command = self.lines[self.index]
         self.index += 1
 
-    # def command_type(self):
-    #     return Command.A_COMMAND
-    #
+    def command_type(self):
+        self._command_type = A_COMMAND_REX.match(self.command)
+        if self._command_type is not None:
+            return Command.A
+
+        # self.command_type = self.c_command_rex.match(self.nowline)
+        # if self.command_type is not None:
+        #     return Command.A
+
+        self._command_type = L_COMMAND_REX.match(self.command)
+        if self._command_type is not None:
+            return Command.L
+
+        return 100
 
 
 if __name__ == '__main__':
