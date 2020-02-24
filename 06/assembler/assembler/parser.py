@@ -1,5 +1,6 @@
 import re
-from constants import *
+
+from assembler.constants import Command
 
 # @xxx
 A_COMMAND_REX = re.compile(r'^@([_.$:a-zA-Z0-9]+)')

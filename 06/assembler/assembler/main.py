@@ -1,10 +1,11 @@
 import argparse
 import os
-from parser import Parser
-from asmcode import AsmCode
-from symbol_table import SymbolTable
-from constants import *
 import pprint
+
+from assembler.asmcode import AsmCode
+from assembler.symbol_table import SymbolTable
+from assembler.constants import *
+from assembler.parser import Parser
 
 
 def is_pos_int(s):
@@ -26,13 +27,13 @@ def main():
     path = os.path.abspath(args.asmfile)
 
     # Initialize parser
-    parser = Parser(path)
     code = AsmCode()
     table = SymbolTable()
 
     print("=== LOOP 1 : Create symbol table phase ===")
 
     index = 0
+    parser = Parser(path)
     while parser.has_more_commands():
         parser.advance()
         if parser.command_type() is Command.L:

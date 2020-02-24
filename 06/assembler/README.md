@@ -3,12 +3,16 @@
 ## Getting Started
 
 ```shell script
-usage: main.py [-h] asmfile
+$ python setup.py clean install   
+...
+
+Installed /Users/ksugihara/.pyenv/versions/3.6.5/lib/python3.6/site-packages/asm-1.0.0-py3.6.egg
+Processing dependencies for asm==1.0.0
+Finished processing dependencies for asm==1.0.0
 ```
 
 ```shell script
-➜ python main.py ../../add/Add.asm 
-
+$ asm ../add/Add.asm
 === LOOP 1 : Create symbol table phase ===
 {'ARG': '0000000000000010',
  'KBD': '0110000000000000',
@@ -33,7 +37,6 @@ usage: main.py [-h] asmfile
  'SP': '0000000000000000',
  'THAT': '0000000000000100',
  'THIS': '0000000000000011'}
-
 === LOOP 2 output assembler phase ===
 {'ARG': '0000000000000010',
  'KBD': '0110000000000000',
@@ -61,7 +64,7 @@ usage: main.py [-h] asmfile
 ```
 
 ```shell script
-➜ cat ../../add/Add.hack 
+$ cat Add.hack 
 0000000000000010
 1110110000010000
 0000000000000011

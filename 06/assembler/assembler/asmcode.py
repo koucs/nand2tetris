@@ -70,3 +70,7 @@ class AsmCode:
 
     def jump(self, mnemonic):
         return self._jump_codes_dict.get(mnemonic)
+
+
+if __name__ == '__main__':
+    pass
