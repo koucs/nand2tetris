@@ -19,7 +19,7 @@ def main():
     p = Parser(path)
     in_name = os.path.basename(path)  # *.vm
     out_path = "{}/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + ".asm")
-    writer = CodeWriter(out_path)
+    writer = CodeWriter(out_path, args.debug)
 
     while p.has_more_commands():
         p.advance()
