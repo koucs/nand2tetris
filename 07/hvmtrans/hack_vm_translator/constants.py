@@ -11,3 +11,25 @@ class Command(Enum):
     FUNCTION = 7
     RETURN = 8
     CALL = 9
+
+
+# arithmetic
+ADD = "add"
+SUB = "sub"
+NEG = "neg"
+EQ = "eq"
+GT = "gt"
+LT = "lt"
+AND = "and"
+OR = "or"
+NOT = "not"
+
+# segment
+CONSTANT = "constant"
+ARGUMENT = "argument"
+LOCAL = "local"
+STATIC = "static"
+THIS = "this"
+THAT = "that"
+POINTER = "pointer"
+TEMP = "temp"
