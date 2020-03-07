@@ -1,10 +1,19 @@
 from hack_vm_translator.constants import *
+import os
+
+segment_command_table = {
+    LOCAL: "LCL",
+    ARGUMENT: "ARG",
+    THIS: "THIS",
+    THAT: "THAT",
+    TEMP: "R5"
+}
 
 
 class CodeWriter:
     def __init__(self, path, debug):
         self._f = open(path, "w")
-        self.file_name = None
+        self.file_name = os.path.basename(path).split(".")[0]
         self._debug = debug
         self._jump_cnt = 0
         return
@@ -58,11 +67,85 @@ class CodeWriter:
     def write_push_pop(self, command, segment, index):
         if self._debug:
             self._f.write("// {} {} {}\n".format(command, segment, index))
-        if command is Command.PUSH and segment == CONSTANT:
-            self._f.write("@{0}\n"
-                          "D=A\n".format(index))
+        if command is Command.PUSH:
+            if segment == CONSTANT:
+                self._f.write("@{0}\n"
+                              "D=A\n".format(index))
+            elif segment in [LOCAL, ARGUMENT, THIS, THAT]:
+                self._f.write("@{0}\n"
+                              "D=M\n"
+                              "@{1}\n"
+                              "A=D+A\n"
+                              "D=M\n".format(segment_command_table[segment], index))
+            elif segment in [TEMP]:
+                self._f.write("@5\n"
+                              "D=A\n"
+                              "@{0}\n"
+                              "A=D+A\n"
+                              "D=M\n".format(index))
+            elif segment in [POINTER]:
+                self._f.write("@3\n"
+                              "D=A\n"
+                              "@{0}\n"
+                              "A=D+A\n"
+                              "D=M\n".format(index))
+            elif segment in [STATIC]:
+                self._f.write("@{0}.{1}\n"
+                              "D=M\n".format(self.file_name, index))
             self._push()
-        return
+
+        elif command is Command.POP:
+            if segment in [LOCAL, ARGUMENT, THIS, THAT]:
+                self._f.write("@{0}\n"
+                              "D=M\n"
+                              "@{1}\n"
+                              "D=D+A\n"
+                              "@R13\n"
+                              "M=D\n"
+                              "@SP\n"
+                              "AM=M-1\n"
+                              "D=M\n"
+                              "@R13\n"
+                              "A=M\n"
+                              "M=D\n".format(segment_command_table[segment], index))
+            elif segment in [TEMP]:
+                self._f.write("@5\n"
+                              "D=A\n"
+                              "@{0}\n"
+                              "D=D+A\n"
+                              "@R13\n"
+                              "M=D\n"
+                              "@SP\n"
+                              "AM=M-1\n"
+                              "D=M\n"
+                              "@R13\n"
+                              "A=M\n"
+                              "M=D\n".format(index))
+            elif segment in [POINTER]:
+                self._f.write("@3\n"
+                              "D=A\n"
+                              "@{0}\n"
+                              "D=D+A\n"
+                              "@R13\n"
+                              "M=D\n"
+                              "@SP\n"
+                              "AM=M-1\n"
+                              "D=M\n"
+                              "@R13\n"
+                              "A=M\n"
+                              "M=D\n".format(index))
+            elif segment in [STATIC]:
+                self._f.write("@{0}.{1}\n"
+                              "D=A\n"
+                              "@R13\n"
+                              "M=D\n"
+                              "@SP\n"
+                              "AM=M-1\n"
+                              "D=M\n"
+                              "@R13\n"
+                              "A=M\n"
+                              "M=D\n".format(self.file_name, index))
+            return
 
     def _push(self):
         self._f.write("@SP\n"
@@ -73,8 +156,7 @@ class CodeWriter:
 
     def _pop(self):
         self._f.write("@SP\n"
-                      "M=M-1\n"
-                      "A=M\n"
+                      "AM=M-1\n"
                       "D=M\n")
 
     def close(self):
