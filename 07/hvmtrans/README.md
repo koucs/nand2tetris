@@ -13,10 +13,36 @@ Finished processing dependencies for hvmt==1.0.0
 ```
 
 ```shell script
-$ hvmt ../add/Add.asm
-
+$ hvmt ../StackArithmetic/SimpleAdd/SimpleAdd.vm --debug
+  1: push constant 7      Command.PUSH         constant             7                   
+  2: push constant 8      Command.PUSH         constant             8                   
+  3: add                  Command.ARITHMETIC   None                 None    
 ```
 
 ```shell script
-TBD
+$ cat ../StackArithmetic/SimpleAdd/SimpleAdd.asm
+
+// DEBUG == Command.PUSH constant 7 ==
+@7
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// DEBUG == Command.PUSH constant 8 ==
+@8
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// DEBUG == add ==
+@SP
+AM=M-1
+D=M
+A=A-1
+M=D+M
+
 ```
