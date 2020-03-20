@@ -29,7 +29,7 @@ def main():
         #     writer.write_push_pop(p.command_type(), p.arg1(), p.arg2())
 
         if args.debug:
-            print("{:>3}: {:<20} {:<20} {:<20} {:<20}".format(
+            print("{:>3}: {:<30} {:<20} {:<20} {:<10}".format(
                 p.index, p.command,
                 str(p.command_type()),
                 str(p.arg1()),
