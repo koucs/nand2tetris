@@ -100,5 +100,36 @@ class CodeWriter:
              "M=D\n"
         return s
 
+    # Program-Flow Command
+    def write_label(self, label):
+        self._program_flow(label, "({0})\n".format(label), "label")
+
+    def write_goto(self, label):
+        self._program_flow(label, "@{0}\n0;JMP\n".format(label), "goto")
+
+    def write_if(self, label):
+        self._program_flow(label, "@SP\nAM=M-1\nD=M\n@{0}\nD;JNE\n".format(label), "if-goto")
+
+    def _program_flow(self, label, output, command):
+        s = ""
+        if self._debug:
+            s += "// DEBUG == {} {} ==\n".format(command, label)
+        s += output
+        self._f.write(s)
+        return
+
+    # Function Calls Command
+    def write_init(self):
+        return
+
+    def write_call(self, f_name, num_args):
+        return
+
+    def write_function(self, f_name, num_locals):
+        return
+
+    def write_return(self):
+        return
+
     def close(self):
         self._f.close()
