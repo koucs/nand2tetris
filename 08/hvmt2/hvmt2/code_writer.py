@@ -102,21 +102,13 @@ class CodeWriter:
 
     # Program-Flow Command
     def write_label(self, label):
-        self._program_flow(label, "({0})\n".format(label), "label")
+        self._write("({0})\n".format(label), "label", [label])
 
     def write_goto(self, label):
-        self._program_flow(label, "@{0}\n0;JMP\n".format(label), "goto")
+        self._write("@{0}\n0;JMP\n".format(label), "goto", [label])
 
     def write_if(self, label):
-        self._program_flow(label, "@SP\nAM=M-1\nD=M\n@{0}\nD;JNE\n".format(label), "if-goto")
-
-    def _program_flow(self, label, output, command):
-        s = ""
-        if self._debug:
-            s += "// DEBUG == {} {} ==\n".format(command, label)
-        s += output
-        self._f.write(s)
-        return
+        self._write("@SP\nAM=M-1\nD=M\n@{0}\nD;JNE\n".format(label), "if-goto", [label])
 
     # Function Calls Command
     def write_init(self):
@@ -126,9 +118,31 @@ class CodeWriter:
         return
 
     def write_function(self, f_name, num_locals):
+        o = "({})\n".format(f_name)
+        # Initialize @LCL+num_locals as 0
+        for i in range(int(num_locals)):
+            o += "@{0}\nD=A\n@LCL\nA=M+D\nM=0\n".format(i)
+        self._write(o, "function", [f_name, num_locals])
         return
 
     def write_return(self):
+        o = "@LCL\nD=M\n@R13\nM=D\n"  # FRAME -> R13
+        o += "@R13\nD=M\n@5\nA=D-A\nD=M\n@R14\nM=D\n"  # RET ( *(FRAME-5) ) -> R14
+        o += "@SP\nAM=M-1\nD=M\n@ARG\nA=M\nM=D\n@ARG\nD=M+1\n@SP\nM=D\n"  # *ARG = pop() , SP = ARG+1
+        o += "@R13\nD=M\n@1\nA=D-A\nD=M\n@THAT\nM=D\n"  # THAT = *(FRAME-1)
+        o += "@R13\nD=M\n@2\nA=D-A\nD=M\n@THIS\nM=D\n"  # THIS = *(FRAME-2)
+        o += "@R13\nD=M\n@3\nA=D-A\nD=M\n@ARG\nM=D\n"  # ARG = *(FRAME-3)
+        o += "@R13\nD=M\n@4\nA=D-A\nD=M\n@LCL\nM=D\n"  # LCL = *(FRAME-4)
+        o += "@R14\nA=M\n0;JMP\n"  # goto RET
+        self._write(o, "return", [])
+        return
+
+    def _write(self, output, command, arg=None):
+        s = str()
+        if self._debug and arg is not None:
+            s += "// DEBUG == {} {} ==\n".format(command, " ".join(arg))
+        s += output
+        self._f.write(s)
         return
 
     def close(self):

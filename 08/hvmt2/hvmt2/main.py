@@ -35,10 +35,10 @@ def main():
             w.write_goto(p.arg1())
         # elif p.command_type() is Command.CALL:
         #     w.write_call(p.arg1(), p.arg2())
-        # elif p.command_type() is Command.FUNCTION:
-        #     w.write_function(p.arg1(), p.arg2())
-        # elif p.command_type() is Command.RETURN:
-        #     w.write_return()
+        elif p.command_type() is Command.FUNCTION:
+            w.write_function(p.arg1(), p.arg2())
+        elif p.command_type() is Command.RETURN:
+            w.write_return()
 
         if args.debug:
             print("{:>3}: {:<30} {:<20} {:<20} {:<10}".format(
