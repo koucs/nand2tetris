@@ -8,10 +8,12 @@ class CodeWriter:
         self._file_name = os.path.basename(path).split(".")[0]
         self._debug = debug
         self._jump_cnt = 0
+        self._ret_cnt = 0
         return
 
     def set_file_name(self, name):
         self._file_name = name
+        self._ret_cnt = 0
 
     def write_arithmetic(self, command):
         s = ""
@@ -112,9 +114,26 @@ class CodeWriter:
 
     # Function Calls Command
     def write_init(self):
+        o = "@256\nD=A\n@SP\nM=D\n"
+        # o += "@{0}\n0;JMP\n".format("Sys.init")
+        self._write(o, "BOOTSTRAP CODE", [])
+        self.write_call("Sys.init", "0")
         return
 
     def write_call(self, f_name, num_args):
+        return_label = "{0}$ret.{1}".format(self._file_name, self._ret_cnt)
+        self._ret_cnt += 1  ## count up the return-address counter
+
+        o = "@{0}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n".format(return_label)  # push return-address
+        o += "@LCL\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"  # push LCL
+        o += "@ARG\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"  # push ARG
+        o += "@THIS\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"  # push THIS
+        o += "@THAT\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n"  # push THAT
+        o += "@SP\nD=M\n@5\nD=D-A\n@{0}\nD=D-A\n@ARG\nM=D\n".format(num_args)  # ARG = SP-n-5
+        o += "@SP\nD=M\n@LCL\nM=D\n"  # LCL = SP
+        o += "@{0}\n0;JMP\n".format(f_name)  # goto f_name
+        o += "({0})\n".format(return_label)  # (return_address) label
+        self._write(o, "call", [f_name, num_args])
         return
 
     def write_function(self, f_name, num_locals):
