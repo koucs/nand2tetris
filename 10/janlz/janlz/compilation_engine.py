@@ -15,7 +15,15 @@ class CompilationEngine:
         with open(in_path) as f:
             # remove whitespaces from a input XML file.
             for line in f:
-                xml_input += line.strip().replace(" ", "")
+                # XXX: For avoiding a bad whitespace's replacement.
+                # NG: <stringConstant> HOW MANY ~!  </stringConstant> => <stringConstant>HOWMANY~</stringConstant>
+                # NG: <stringConstant> HOW MANY ~!  </stringConstant> => <stringConstant>HOW MANY ~! </stringConstant>
+                if line.startswith("<stringConstant>"):
+                    xml_input += line.strip() \
+                        .replace("<stringConstant> ", "<stringConstant>") \
+                        .replace(" </stringConstant>", "</stringConstant>")
+                else:
+                    xml_input += line.strip().replace(" ", "")
 
         # tree = ET.parse(xml_input)
         # self._root = tree.getroot()
@@ -25,8 +33,6 @@ class CompilationEngine:
         self._line_num = 0
         return
 
-    SUBROUTINE_DEC_KEYWORDS = ["constructor", "function", "method", "void"]
-
     def compile_class(self):
         self._dump_xml("<class>")
         self._indent += 1
@@ -34,7 +40,7 @@ class CompilationEngine:
         self._output("keyword", "class")
         self._output("identifier", None)
         self._output("symbol", "{")
-        if self._text() in self.SUBROUTINE_DEC_KEYWORDS:
+        if self._text() in ["constructor", "function", "method", "void"]:
             self.compile_subroutine()
         self._output("symbol", "}")
 
@@ -45,14 +51,12 @@ class CompilationEngine:
     def compile_class_var_dec(self):
         return
 
-    SUBROUTINE_TYPE_KEYWORDS = ["void", "int", "char", "boolean"]
-
     def compile_subroutine(self):
         self._dump_xml("<subroutineDec>")
         self._indent += 1
         self._output("keyword", None)
 
-        if self._text() in self.SUBROUTINE_TYPE_KEYWORDS:
+        if self._text() in ["void", "int", "char", "boolean"]:
             self._output("keyword", None)
         else:
             self._output("identifier", None)
@@ -124,13 +128,11 @@ class CompilationEngine:
             self._output("identifier", None)
         return
 
-    STATEMENTS_KEYWORDS = ["let", "if", "while", "do", "return"]
-
     def compile_statements(self):
         self._dump_xml("<statements>")
         self._indent += 1
 
-        while self._text() in self.STATEMENTS_KEYWORDS:
+        while self._text() in ["let", "if", "while", "do", "return"]:
             if self._text() == "if":
                 self.compile_if()
             elif self._text() == "let":
@@ -150,9 +152,8 @@ class CompilationEngine:
         self._dump_xml("<doStatement>")
         self._indent += 1
 
-        # TODO: will be removed
-        while self._text() != ";":
-            self._advance()
+        self._output("keyword", "do")
+        self._compile_subroutine_call()
         self._output("symbol", ";")
 
         self._indent -= 1
@@ -164,8 +165,14 @@ class CompilationEngine:
         self._indent += 1
 
         # TODO: will be removed
-        while self._text() != "}":
-            self._advance()
+        # while self._text() != "}":
+        #     self._advance()
+        self._output("keyword", "while")
+        self._output("symbol", "(")
+        self.compile_expression()
+        self._output("symbol", ")")
+        self._output("symbol", "{")
+        self.compile_statements()
         self._output("symbol", "}")
 
         self._indent -= 1
@@ -199,10 +206,9 @@ class CompilationEngine:
         self._dump_xml("<returnStatement>")
         self._indent += 1
 
-        # TODO: will be removed
-        while self._text() != ";":
-            self._advance()
-
+        self._output("keyword", "return")
+        if self._text() != ";":
+            self.compile_expression()
         self._output("symbol", ";")
 
         self._indent -= 1
@@ -225,14 +231,86 @@ class CompilationEngine:
     def compile_expression(self):
         self._dump_xml("<expression>")
         self._indent += 1
+
+        self.compile_term()
+        if self._text() in ["+", "-", "*", "/", "=", "&amp;", "|", "<", ">"]:
+            self._output("symbol", None)
+            self.compile_term()
+
         self._indent -= 1
         self._dump_xml("</expression>")
         return
 
     def compile_term(self):
+        self._dump_xml("<term>")
+        self._indent += 1
+
+        if self._tag() == "integerConstant":
+            self._output("integerConstant", None)
+
+        elif self._tag() == "stringConstant":
+            self._output("stringConstant", None)
+
+        elif self._tag() == "keyword" and self._text() in ["true", "false", "this", "null"]:
+            self._output("keyword", None)
+
+        elif self._tag() == "identifier":
+            # fetch a advanced element.
+            next_element = self._root[self._line_num + 1]
+
+            if next_element.text == "[":
+                self._output("identifier", None)
+                self._output("symbol", "[")
+                self.compile_expression()
+                self._output("symbol", "]")
+
+            elif next_element.text in ["(", "."]:
+                self._compile_subroutine_call()
+
+            else:
+                self._output("identifier", None)
+
+
+        elif self._tag() == "symbol" and self._text() == "(":
+            self._output("symbol", "(")
+            self.compile_expression()
+            self._output("symbol", ")")
+
+        elif self._tag() == "symbol" and self._text() in ["-", "~"]:
+            self._output("symbol", None)
+            self.compile_term()
+
+        self._indent -= 1
+        self._dump_xml("</term>")
+        return
+
+    def _compile_subroutine_call(self):
+        self._output("identifier", None)
+        if self._text() == "(":
+            self._output("symbol", "(")
+            self.compile_expression_list()
+            self._output("symbol", ")")
+        elif self._text() == ".":
+            self._output("symbol", ".")
+            self._output("identifier", None)
+            self._output("symbol", "(")
+            self.compile_expression_list()
+            self._output("symbol", ")")
         return
 
     def compile_expression_list(self):
+        self._dump_xml("<expressionList>")
+        self._indent += 1
+
+        # XXX: It seems a bad check condition...
+        if self._text() != ")":
+            self.compile_expression()
+            while self._text() == ",":
+                self._output("symbol", ",")
+                self.compile_expression()
+
+        self._indent -= 1
+        self._dump_xml("</expressionList>")
         return
 
     PADDING = "  "
