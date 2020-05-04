@@ -32,7 +32,7 @@ def handle_input_dir(args):
 
     for path in jack_paths:
         out_T_path = "{}{}T.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
-        out_path = "{}{}T.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
+        out_path = "{}{}.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
         output_xml(path, out_T_path, out_path, args.debug)
     return
 

@@ -2,17 +2,11 @@
 
 ## Getting Started
 
-### Tokenizer
-
 #### Preconditions
 
-${JackFIleBaseName}T.xml is the tokenized result.
-
-And those files have been stored at the following directories.
+${JackFIleBaseName}T.xml is **tokenizer.py** result.
 
 ```shell script
-$ find ../projects/10/ -name "*T.xml" | grep -v "output"
-
 ../projects/10//ExpressionLessSquare/SquareT.xml
 ../projects/10//ExpressionLessSquare/SquareGameT.xml
 ../projects/10//ExpressionLessSquare/MainT.xml
@@ -22,18 +16,36 @@ $ find ../projects/10/ -name "*T.xml" | grep -v "output"
 ../projects/10//Square/MainT.xml
 ```
 
-#### Compile
+${JackFIleBaseName}.xml is **compilation_engine.py** result.
+
+```shell script
+../projects/10//ExpressionLessSquare/Main.xml
+../projects/10//ExpressionLessSquare/SquareGame.xml
+../projects/10//ExpressionLessSquare/Square.xml
+../projects/10//ArrayTest/Main.xml
+../projects/10//Square/Main.xml
+../projects/10//Square/SquareGame.xml
+../projects/10//Square/Square.xml
+```
+
+#### Build
 
 ```shell script
 $ python setup.py clean install
-
+...
 
 Using /path/to/.pyenv/versions/3.7.3/lib/python3.7/site-packages/zipp-3.1.0-py3.7.egg
 Finished processing dependencies for janlz==1.0.0
 ```
 
+#### Run
+
 ```shell script
 $ janlz ../ArrayTest/Main.jack --debug
+in    : /path/to/nand2tetris/projects/10/ArrayTest/Main.jack
+out(T): /path/to/nand2tetris/projects/10/ArrayTest/output/MainT.xml
+out   : /path/to/nand2tetris/projects/10/ArrayTest/output/Main.xml
+
   1:                                None                 None                 None       None                 None       None
   2:                                None                 None                 None       None                 None       None
   3:                                None                 None                 None       None                 None       None
@@ -49,6 +61,7 @@ $ janlz ../ArrayTest/Main.jack --debug
 ```
 
 #### Confirm the output file
+
 ```shell script
 $ head ../ArrayTest/output/MainT.xml
 <tokens>
@@ -61,6 +74,18 @@ $ head ../ArrayTest/output/MainT.xml
 <symbol> ( </symbol>
 <symbol> ) </symbol>
 <symbol> { </symbol>
+
+$ head ../ArrayTest/output/MainT.xml
+<class>
+  <keyword> class </keyword>
+  <identifier> Main </identifier>
+  <symbol> { </symbol>
+  <subroutineDec>
+    <keyword> function </keyword>
+    <keyword> void </keyword>
+    <identifier> main </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
 ```
 
 
@@ -70,6 +95,9 @@ Successful examples.
 
 ```shell script
 $ ./TextComparer.sh ../projects/10/ArrayTest/MainT.xml ../projects/10/ArrayTest/output/MainT.xml
+Comparison ended successfully
+
+$ ./TextComparer.sh ../projects/10/ArrayTest/Main.xml ../projects/10/ArrayTest/output/Main.xml
 Comparison ended successfully
 ```
 

@@ -40,8 +40,11 @@ class CompilationEngine:
         self._output("keyword", "class")
         self._output("identifier", None)
         self._output("symbol", "{")
-        if self._text() in ["constructor", "function", "method", "void"]:
-            self.compile_subroutine()
+        while self._text() in ["constructor", "function", "method", "static", "field"]:
+            if self._text() in ["constructor", "function", "method"]:
+                self.compile_subroutine()
+            elif self._text() in ["static", "field"]:
+                self.compile_class_var_dec()
         self._output("symbol", "}")
 
         self._indent -= 1
@@ -49,25 +52,38 @@ class CompilationEngine:
         return
 
     def compile_class_var_dec(self):
+        self._dump_xml("<classVarDec>")
+        self._indent += 1
+
+        self._output("keyword", None)
+        if self._text() in ["int", "char", "boolean"]:
+            self._output("keyword", None)
+        else:
+            self._output("identifier", None)
+        self._output("identifier", None)
+        while self._text() == ",":
+            self._output("symbol", ",")
+            self._output("identifier", None)
+        self._output("symbol", ";")
+
+        self._indent -= 1
+        self._dump_xml("</classVarDec>")
         return
 
     def compile_subroutine(self):
         self._dump_xml("<subroutineDec>")
         self._indent += 1
-        self._output("keyword", None)
 
+        self._output("keyword", None)
         if self._text() in ["void", "int", "char", "boolean"]:
             self._output("keyword", None)
         else:
             self._output("identifier", None)
-
         # subroutine name
         self._output("identifier", None)
-
         self._output("symbol", "(")
         self.compile_parameter_list()
         self._output("symbol", ")")
-
         self.compile_subroutine_body()
 
         self._indent -= 1
@@ -88,14 +104,33 @@ class CompilationEngine:
         self._dump_xml("</subroutineBody>")
         return
 
+    VAR_TYPE_KEYWORDS = ["int", "char", "boolean"]
+
     def compile_parameter_list(self):
         self._dump_xml("<parameterList>")
         self._indent += 1
+
+        if self._text() in self.VAR_TYPE_KEYWORDS:
+            self._output("keyword", None)
+            self._output("identifier", None)
+        elif self._tag() == "identifier":
+            self._output("identifier", None)
+            self._output("identifier", None)
+
+        while self._text() == ",":
+            self._output("symbol", ",")
+            if self._text() in self.VAR_TYPE_KEYWORDS:
+                self._output("keyword", None)
+                self._output("identifier", None)
+            elif self._tag() == "identifier":
+                self._output("identifier", None)
+                self._output("identifier", None)
+            else:
+                break
+
         self._indent -= 1
         self._dump_xml("</parameterList>")
         return
-
-    VAR_TYPE_KEYWORDS = ["int", "char", "boolean"]
 
     def compile_var_dec(self):
         self._dump_xml("<varDec>")
@@ -164,9 +199,6 @@ class CompilationEngine:
         self._dump_xml("<whileStatement>")
         self._indent += 1
 
-        # TODO: will be removed
-        # while self._text() != "}":
-        #     self._advance()
         self._output("keyword", "while")
         self._output("symbol", "(")
         self.compile_expression()
@@ -185,17 +217,14 @@ class CompilationEngine:
 
         self._output("keyword", "let")
         self._output("identifier", None)
+
         if self._text() == "[":
             self._output("symbol", "[")
             self.compile_expression()
             self._output("symbol", "]")
+
         self._output("symbol", "=")
         self.compile_expression()
-
-        # TODO: will be removed
-        while self._text() != ";":
-            self._advance()
-
         self._output("symbol", ";")
 
         self._indent -= 1
@@ -219,11 +248,21 @@ class CompilationEngine:
         self._dump_xml("<ifStatement>")
         self._indent += 1
 
-        # TODO: will be removed
-        while self._text() != "}":
-            self._advance()
+        self._output("keyword", "if")
+        self._output("symbol", "(")
+        self.compile_expression()
+        self._output("symbol", ")")
 
+        self._output("symbol", "{")
+        self.compile_statements()
         self._output("symbol", "}")
+
+        if self._text() == "else":
+            self._output("keyword", "else")
+            self._output("symbol", "{")
+            self.compile_statements()
+            self._output("symbol", "}")
+
         self._indent -= 1
         self._dump_xml("</ifStatement>")
         return
@@ -233,7 +272,7 @@ class CompilationEngine:
         self._indent += 1
 
         self.compile_term()
-        if self._text() in ["+", "-", "*", "/", "=", "&amp;", "|", "<", ">"]:
+        if self._text() in ["+", "-", "*", "/", "=", "&", "|", "<", ">"]:
             self._output("symbol", None)
             self.compile_term()
 
