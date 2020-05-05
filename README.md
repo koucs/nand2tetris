@@ -1,6 +1,6 @@
 ## About this repository
 
-My Soltions for [From Nand to Tetris](https://www.nand2tetris.org/).
+My Solutions for the [From Nand to Tetris](https://www.nand2tetris.org/).
 
 ### Python Modules
 
