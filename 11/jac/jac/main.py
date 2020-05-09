@@ -51,7 +51,11 @@ def output_xml(jack_path, t_xml_path, c_xml_path, vm_path, debug):
     t = Tokenizer(jack_path)
     tokenize(t, f, False)
     f.close()
+
     # Chapter 10: Compilation Engine
+    # In the ch11, I expanded the schema of xml for applying "symbol_table.py"
+    #         <identifier category="class" type="used" kind="" kind_index=""> Array </identifier>
+    #         <identifier category="class" type="defined" kind="var" kind_index="0"> a </identifier>
     c = CompilationEngine(t_xml_path, c_xml_path)
     c.compile_class()
 
