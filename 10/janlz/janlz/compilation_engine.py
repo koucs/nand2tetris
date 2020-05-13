@@ -33,6 +33,10 @@ class CompilationEngine:
         self._line_num = 0
         return
 
+    def close(self):
+        self._out_file.close()
+        return
+
     def compile_class(self):
         self._dump_xml("<class>")
         self._indent += 1

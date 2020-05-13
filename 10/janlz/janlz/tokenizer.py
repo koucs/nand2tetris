@@ -2,7 +2,7 @@ import re
 from janlz.constants import Token, KEYWORD_LOOKUP_MAP
 
 KEYWORD_REX = re.compile(
-    r'^(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return)')
+    r'^(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do\s|if|else|while|return)')
 SYMBOL_REX = re.compile(r'^([{}()\[\]_.,;+\-*\/&|<>=~])')
 IDENTIFIER_REX = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)')
 INT_CONSTANT_REX = re.compile(r'^(\d{1,5})')
@@ -149,7 +149,7 @@ class Tokenizer:
             if token_type is not None:
                 self._token_type = token_type
             if token_type is Token.KEYWORD:
-                self._keyword = KEYWORD_LOOKUP_MAP.get(result.group(1))
+                self._keyword = KEYWORD_LOOKUP_MAP.get(result.group(1).replace(" ", ""))
             elif token_type is Token.SYMBOL:
                 self._symbol = result.group(1)
             elif token_type is Token.IDENTIFIER:
