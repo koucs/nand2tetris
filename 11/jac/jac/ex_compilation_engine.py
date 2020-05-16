@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 from jac.symbol_table import SymbolTable
 from jac.constants import *
+from jac.vm_writer import VMWriter
 
 CLASS_VAR_DEC_KEYWORDS = ["static", "field"]
 PARAMETER_LIST_TYPE_KEYWORDS = ["void", "int", "char"]
@@ -35,10 +36,15 @@ class ExCompilationEngine:
         self._line_num = 0
 
         self._symbol_table = SymbolTable()
+        self._vm_writer = VMWriter("../../Playgrounds/output.vm")
+
+        self._class_name = None
+        self._subroutine_params_num = 0
         return
 
     def close(self):
         self._out_file.close()
+        self._vm_writer.close()
         return
 
     def compile_class(self):
@@ -46,6 +52,8 @@ class ExCompilationEngine:
         self._indent += 1
 
         self._output("keyword", "class")
+        self._class_name = self._text()
+
         self._output_identifier("class", 0, True)
         self._output("symbol", "{")
         while self._text() in ["constructor", "function", "method", "static", "field"]:
@@ -98,14 +106,20 @@ class ExCompilationEngine:
         else:
             self._output("identifier", None)
         # subroutine name
+        subroutine_name = self._text()
         self._output("identifier", None)
         self._output("symbol", "(")
+
+        self._subroutine_params_num = 0
         self.compile_parameter_list()
+
         self._output("symbol", ")")
         self.compile_subroutine_body()
 
         self._indent -= 1
         self._dump_xml("</subroutineDec>")
+
+        self._vm_writer.write_function("{}.{}".format(self._class_name, subroutine_name), self._subroutine_params_num)
         return
 
     def compile_subroutine_body(self):
@@ -131,18 +145,22 @@ class ExCompilationEngine:
         if self._text() in self.VAR_TYPE_KEYWORDS:
             self._output("keyword", None)
             self._output("identifier", None)
+            self._subroutine_params_num += 1
         elif self._tag() == "identifier":
             self._output("identifier", None)
             self._output("identifier", None)
+            self._subroutine_params_num += 1
 
         while self._text() == ",":
             self._output("symbol", ",")
             if self._text() in self.VAR_TYPE_KEYWORDS:
                 self._output("keyword", None)
                 self._output("identifier", None)
+                self._subroutine_params_num += 1
             elif self._tag() == "identifier":
                 self._output("identifier", None)
                 self._output("identifier", None)
+                self._subroutine_params_num += 1
             else:
                 break
 

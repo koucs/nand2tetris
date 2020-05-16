@@ -40,7 +40,7 @@ def _remove_comment(lines):
 
     # Case 3
     MULTI_LINES_COMMENT_REX_START = re.compile(r'^(\s*\/\*\*\s*)$')
-    MULTI_LINES_COMMENT_REX_MID = re.compile(r'^(\s*\*[^\*\/]+)$')
+    MULTI_LINES_COMMENT_REX_MID = re.compile(r'^(\s*\*[^\/]+)$')
     MULTI_LINES_COMMENT_REX_END = re.compile(r'^(\s*\*\/)$')
     for i, line in enumerate(lines):
         result = MULTI_LINES_COMMENT_REX_START.match(line)

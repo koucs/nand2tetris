@@ -25,6 +25,8 @@ class VMWriter():
         return
 
     def write_function(self, name, num_locals):
+        s = "function {} {}\n".format(name, str(num_locals))
+        self._f.write(s)
         return
 
     def write_return(self):
