@@ -57,7 +57,7 @@ class SymbolTableXml:
                     _append_attrib(child, "arg", self._st.index_of(identifier), True)
 
                 else:
-                    _append_attrib(child, self._st.kind_of(identifier).name, self._st.index_of(identifier), False)
+                    _append_attrib(child, self._st.kind_of(identifier).name.lower(), self._st.index_of(identifier), False)
 
             if len(list(child)) != 0:
                 self._search_identifier(list(child), child.tag, debug)

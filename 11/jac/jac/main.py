@@ -1,7 +1,7 @@
 import argparse
 import os
 from janlz.tokenizer import Tokenizer
-from janlz.compilation_engine import CompilationEngine
+from jac.compilation_engine import ExCompilationEngine
 from janlz.main import tokenize
 from jac.symbol_table_xml import SymbolTableXml
 
@@ -44,10 +44,12 @@ def handle_input_dir(args):
 
 def output_xml(jack_path, t_xml_path, c_xml_path, st_xml_path, vm_path, debug):
     if debug:
-        print("{:<20}: {}\n{:<20}: {}\n{:<20}: {}\n{:<20}: {}\n".format("input", jack_path,
-                                                                        "output (tokenized)", t_xml_path,
-                                                                        "output (parsed)", c_xml_path,
-                                                                        "output (vm)", vm_path))
+        print("{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n".format("input", jack_path,
+                                                                                    "output (tokenized)", t_xml_path,
+                                                                                    "output (parsed)", c_xml_path,
+                                                                                    "output (symbol table)",
+                                                                                    st_xml_path,
+                                                                                    "output (vm)", vm_path))
 
     # Chapter 10: Tokenizer
     f = open(t_xml_path, "w")
@@ -56,7 +58,7 @@ def output_xml(jack_path, t_xml_path, c_xml_path, st_xml_path, vm_path, debug):
     f.close()
 
     # Chapter 10: Compilation Engine
-    c = CompilationEngine(t_xml_path, c_xml_path)
+    c = ExCompilationEngine(t_xml_path, c_xml_path)
     c.compile_class()
     c.close()
 
