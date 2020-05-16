@@ -1,7 +1,8 @@
 import argparse
 import os
 from janlz.tokenizer import Tokenizer
-from jac.compilation_engine import ExCompilationEngine
+from janlz.compilation_engine import CompilationEngine
+from jac.ex_compilation_engine import ExCompilationEngine
 from janlz.main import tokenize
 from jac.symbol_table_xml import SymbolTableXml
 
@@ -58,14 +59,18 @@ def output_xml(jack_path, t_xml_path, c_xml_path, st_xml_path, vm_path, debug):
     f.close()
 
     # Chapter 10: Compilation Engine
-    c = ExCompilationEngine(t_xml_path, c_xml_path)
+    c = CompilationEngine(t_xml_path, c_xml_path)
+    c.compile_class()
+    c.close()
+
+    c = ExCompilationEngine(t_xml_path, st_xml_path)
     c.compile_class()
     c.close()
 
     # Chapter 11: Symbol Table
-    stf = SymbolTableXml(c_xml_path)
-    stf.analyze_symbol(debug)
-    stf.write(st_xml_path)
+    # stf = SymbolTableXml(c_xml_path)
+    # stf.analyze_symbol(debug)
+    # stf.write(st_xml_path)
 
 
 def main():

@@ -1,10 +1,12 @@
 import xml.etree.ElementTree as ET
+from jac.symbol_table import SymbolTable
+from jac.constants import *
 
 CLASS_VAR_DEC_KEYWORDS = ["static", "field"]
 PARAMETER_LIST_TYPE_KEYWORDS = ["void", "int", "char"]
 
 
-class CompilationEngine:
+class ExCompilationEngine:
     def __init__(self, in_path, out_path):
         self._in_path = in_path
         self._in_path = out_path
@@ -31,6 +33,8 @@ class CompilationEngine:
         if self._root.tag != "tokens":
             raise RuntimeError("The root tag should be '<tokens>~</tokens>'.")
         self._line_num = 0
+
+        self._symbol_table = SymbolTable()
         return
 
     def close(self):
@@ -42,7 +46,7 @@ class CompilationEngine:
         self._indent += 1
 
         self._output("keyword", "class")
-        self._output("identifier", None)
+        self._output_identifier("class", 0, True)
         self._output("symbol", "{")
         while self._text() in ["constructor", "function", "method", "static", "field"]:
             if self._text() in ["constructor", "function", "method"]:
@@ -59,12 +63,22 @@ class CompilationEngine:
         self._dump_xml("<classVarDec>")
         self._indent += 1
 
+        category = self._text()
         self._output("keyword", None)
+
+        type = self._text()
         if self._text() in ["int", "char", "boolean"]:
             self._output("keyword", None)
         else:
             self._output("identifier", None)
-        self._output("identifier", None)
+
+        if category == "static":
+            self._symbol_table.define(self._text(), type, Kind.STATIC)
+            self._output_identifier("static", self._symbol_table.index_of(self._text()), True)
+        else:
+            self._symbol_table.define(self._text(), type, Kind.FIELD)
+            self._output_identifier("field", self._symbol_table.index_of(self._text()), True)
+
         while self._text() == ",":
             self._output("symbol", ",")
             self._output("identifier", None)
@@ -364,9 +378,25 @@ class CompilationEngine:
     def _output(self, tag, checked=None):
         e = self._element()
         if e.tag == tag and (checked is None or e.text == checked):
-            append = ET.Element(tag)
-            append.text = " {} ".format(e.text)
-            xml_str = ET.tostring(append).decode()
+            elem = ET.Element(tag)
+            elem.text = " {} ".format(e.text)
+            xml_str = ET.tostring(elem).decode()
+            self._dump_xml(xml_str)
+        # else:
+        #     raise RuntimeError("Compile Error")
+        self._advance()
+
+    def _output_identifier(self, category, index, is_defined):
+        e = self._element()
+        if e.tag == "identifier":
+            elem = ET.Element("identifier")
+            if self.ST_FLAG:
+                elem.attrib["category"] = category
+                elem.attrib["index"] = str(index)
+                elem.attrib["is_defined"] = str(is_defined)
+                elem.attrib["is_used"] = str(not is_defined)
+            elem.text = " {} ".format(e.text)
+            xml_str = ET.tostring(elem).decode()
             self._dump_xml(xml_str)
         # else:
         #     raise RuntimeError("Compile Error")
@@ -384,3 +414,8 @@ class CompilationEngine:
     def _advance(self):
         self._line_num += 1
         return
+
+    ST_FLAG = True
+
+    def set_st_flag(self, flag):
+        self.ST_FLAG = flag
