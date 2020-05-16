@@ -3,6 +3,7 @@ import os
 from janlz.tokenizer import Tokenizer
 from janlz.compilation_engine import CompilationEngine
 from janlz.main import tokenize
+from jac.symbol_table_xml import SymbolTableXml
 
 
 def parse_args():
@@ -19,10 +20,11 @@ def handle_input_file(args):
     in_name = os.path.basename(path)  # *.vm
     out_T_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + "T.xml")
     out_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + ".xml")
+    st_xml_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + "ST.xml")
     out_vm_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + ".vm")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
-    output_xml(path, out_T_path, out_path, out_vm_path, args.debug)
+    output_xml(path, out_T_path, out_path, st_xml_path, out_vm_path, args.debug)
 
 
 def handle_input_dir(args):
@@ -34,12 +36,13 @@ def handle_input_dir(args):
     for path in jack_paths:
         out_T_path = "{}{}T.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
         out_path = "{}{}.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
+        st_xml_path = "{}{}ST.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
         out_vm_path = "{}{}.vm".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
-        output_xml(path, out_T_path, out_path, out_vm_path, args.debug)
+        output_xml(path, out_T_path, out_path, st_xml_path, out_vm_path, args.debug)
     return
 
 
-def output_xml(jack_path, t_xml_path, c_xml_path, vm_path, debug):
+def output_xml(jack_path, t_xml_path, c_xml_path, st_xml_path, vm_path, debug):
     if debug:
         print("{:<20}: {}\n{:<20}: {}\n{:<20}: {}\n{:<20}: {}\n".format("input", jack_path,
                                                                         "output (tokenized)", t_xml_path,
@@ -53,13 +56,14 @@ def output_xml(jack_path, t_xml_path, c_xml_path, vm_path, debug):
     f.close()
 
     # Chapter 10: Compilation Engine
-    # In the ch11, I expanded the schema of xml for applying "symbol_table.py"
-    #         <identifier category="class" type="used" kind="" kind_index=""> Array </identifier>
-    #         <identifier category="class" type="defined" kind="var" kind_index="0"> a </identifier>
     c = CompilationEngine(t_xml_path, c_xml_path)
     c.compile_class()
+    c.close()
 
-    # Chapter 11:
+    # Chapter 11: Symbol Table
+    stf = SymbolTableXml(c_xml_path)
+    stf.analyze_symbol(debug)
+    stf.write(st_xml_path)
 
 
 def main():
