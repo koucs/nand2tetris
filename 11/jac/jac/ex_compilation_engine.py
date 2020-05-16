@@ -36,10 +36,11 @@ class ExCompilationEngine:
         self._line_num = 0
 
         self._symbol_table = SymbolTable()
-        self._vm_writer = VMWriter("../../Playgrounds/output.vm")
+        self._vm_writer = VMWriter("../../Playgrounds/Main.vm")
 
         self._class_name = None
         self._subroutine_params_num = 0
+        self._expresson_num = 0
         return
 
     def close(self):
@@ -112,6 +113,7 @@ class ExCompilationEngine:
 
         self._subroutine_params_num = 0
         self.compile_parameter_list()
+        self._vm_writer.write_function("{}.{}".format(self._class_name, subroutine_name), self._subroutine_params_num)
 
         self._output("symbol", ")")
         self.compile_subroutine_body()
@@ -119,7 +121,6 @@ class ExCompilationEngine:
         self._indent -= 1
         self._dump_xml("</subroutineDec>")
 
-        self._vm_writer.write_function("{}.{}".format(self._class_name, subroutine_name), self._subroutine_params_num)
         return
 
     def compile_subroutine_body(self):
@@ -274,7 +275,10 @@ class ExCompilationEngine:
         self._output("keyword", "return")
         if self._text() != ";":
             self.compile_expression()
+        else:
+            self._vm_writer.write_push("constant", 0)
         self._output("symbol", ";")
+        self._vm_writer.write_return()
 
         self._indent -= 1
         self._dump_xml("</returnStatement>")
@@ -307,10 +311,24 @@ class ExCompilationEngine:
         self._dump_xml("<expression>")
         self._indent += 1
 
+        command = None
+
         self.compile_term()
         if self._text() in ["+", "-", "*", "/", "=", "&", "|", "<", ">"]:
+
+            if self._text() == "+":
+                command = "add"
+            elif self._text() == "-":
+                command = "sub"
+            elif self._text() == "*":
+                command = "call Math.multiply 2"
+            elif self._text() == "/":
+                command = "call Math.divide 2"
+
             self._output("symbol", None)
             self.compile_term()
+
+        if command is not None: self._vm_writer.write_arithmetic(command)
 
         self._indent -= 1
         self._dump_xml("</expression>")
@@ -321,6 +339,7 @@ class ExCompilationEngine:
         self._indent += 1
 
         if self._tag() == "integerConstant":
+            self._vm_writer.write_push("constant", int(self._text()))
             self._output("integerConstant", None)
 
         elif self._tag() == "stringConstant":
@@ -360,17 +379,25 @@ class ExCompilationEngine:
         return
 
     def _compile_subroutine_call(self):
+        method = self._text()
+
         self._output("identifier", None)
+        self._expresson_num = 0
+
+
         if self._text() == "(":
             self._output("symbol", "(")
             self.compile_expression_list()
             self._output("symbol", ")")
         elif self._text() == ".":
             self._output("symbol", ".")
+            method += "." + self._text()
             self._output("identifier", None)
             self._output("symbol", "(")
             self.compile_expression_list()
             self._output("symbol", ")")
+
+        self._vm_writer.write_call(method, self._expresson_num)
         return
 
     def compile_expression_list(self):
@@ -380,9 +407,11 @@ class ExCompilationEngine:
         # XXX: It seems a bad check condition...
         if self._text() != ")":
             self.compile_expression()
+            self._expresson_num += 1
             while self._text() == ",":
                 self._output("symbol", ",")
                 self.compile_expression()
+                self._expresson_num += 1
 
         self._indent -= 1
         self._dump_xml("</expressionList>")
