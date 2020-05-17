@@ -63,7 +63,7 @@ def output_xml(jack_path, t_xml_path, c_xml_path, st_xml_path, vm_path, debug):
     c.compile_class()
     c.close()
 
-    c = ExCompilationEngine(t_xml_path, st_xml_path)
+    c = ExCompilationEngine(t_xml_path, st_xml_path, vm_path)
     c.compile_class()
     c.close()
 

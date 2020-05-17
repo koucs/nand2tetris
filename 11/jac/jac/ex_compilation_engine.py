@@ -8,7 +8,7 @@ PARAMETER_LIST_TYPE_KEYWORDS = ["void", "int", "char"]
 
 
 class ExCompilationEngine:
-    def __init__(self, in_path, out_path):
+    def __init__(self, in_path, out_path, out_vm_path):
         self._in_path = in_path
         self._in_path = out_path
         self._out_file = open(out_path, "w")
@@ -36,7 +36,7 @@ class ExCompilationEngine:
         self._line_num = 0
 
         self._symbol_table = SymbolTable()
-        self._vm_writer = VMWriter("../../Playgrounds/Main.vm")
+        self._vm_writer = VMWriter(out_vm_path)
 
         self._class_name = None
         self._subroutine_params_num = 0

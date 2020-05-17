@@ -39,22 +39,23 @@ def _remove_comment(lines):
     lines = [re.sub(ONE_LINE_COMMENT_REX, '', l) for l in lines]
 
     # Case 3
-    MULTI_LINES_COMMENT_REX_START = re.compile(r'^(\s*\/\*\*\s*)$')
-    MULTI_LINES_COMMENT_REX_MID = re.compile(r'^(\s*\*[^\/]+)$')
+    MULTI_LINES_COMMENT_REX_START = re.compile(r'^(\s*\/\*\*\s*[^\/]*[\*\/]*)$')
+    MULTI_LINES_COMMENT_REX_MID = re.compile(r'^(\s*\*[^\/]*[\*\/]*)$')
     MULTI_LINES_COMMENT_REX_END = re.compile(r'^(\s*\*\/)$')
     for i, line in enumerate(lines):
         result = MULTI_LINES_COMMENT_REX_START.match(line)
         if result is not None and result.group(1) is not None:
 
             # Subtract "/** ~"
-            lines[i] = re.sub(MULTI_LINES_COMMENT_REX_START, '', line)
+            lines[i] = re.sub(MULTI_LINES_COMMENT_REX_START, '', line).strip()
 
             # Subtract "* ~"
             i += 1
             mid_line = lines[i]
             match = MULTI_LINES_COMMENT_REX_MID.match(mid_line)
             while match is not None and match.group(1) is not None:
-                lines[i] = re.sub(MULTI_LINES_COMMENT_REX_MID, '', mid_line)
+                lines[i] = re.sub(MULTI_LINES_COMMENT_REX_MID, '', mid_line).strip()
+                if len(lines) == i+1: break
                 i += 1
                 mid_line = lines[i]
                 match = MULTI_LINES_COMMENT_REX_MID.match(mid_line)
@@ -63,7 +64,7 @@ def _remove_comment(lines):
             last_line = lines[i]
             match = MULTI_LINES_COMMENT_REX_END.match(last_line)
             if match is not None and match.group(1) is not None:
-                lines[i] = re.sub(MULTI_LINES_COMMENT_REX_END, '', last_line)
+                lines[i] = re.sub(MULTI_LINES_COMMENT_REX_END, '', last_line).strip()
 
     return lines
 
@@ -76,7 +77,7 @@ class Tokenizer:
         f.close()
 
         # Remove newline char from the input
-        self.lines = [com.strip() for com in self.lines]
+        self.lines = [com.rstrip() for com in self.lines]
         # Remove comment
         self.lines = _remove_comment(self.lines)
 

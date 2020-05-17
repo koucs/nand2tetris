@@ -36,7 +36,7 @@ class VMWriter():
         return
 
     def write_return(self):
-        self._f.write("return")
+        self._f.write("return\n")
         return
 
     def close(self):
