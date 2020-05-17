@@ -12,3 +12,11 @@ class Kind(Enum):
 CLASS_SCOPE_KIND_LIST = [Kind.STATIC, Kind.FIELD]
 
 SUBROUTINE_SCOPE_KIND_LIST = [Kind.ARG, Kind.VAR]
+
+KIND_VM_MAP = {
+    Kind.ARG: "argument",
+    Kind.VAR: "local",
+    Kind.STATIC: "static",
+    Kind.FIELD: "field",
+    Kind.NONE: "NONE"
+}

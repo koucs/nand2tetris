@@ -9,6 +9,8 @@ class VMWriter():
         return
 
     def write_pop(self, segment, index):
+        s = "pop {} {}\n".format(segment, str(index))
+        self._f.write(s)
         return
 
     def write_arithmetic(self, command):
@@ -16,18 +18,23 @@ class VMWriter():
         return
 
     def write_label(self, label):
+        s = "label {}\n".format(label)
+        self._f.write(s)
         return
 
     def write_goto(self, label):
+        s = "goto {}\n".format(label)
+        self._f.write(s)
         return
 
     def write_if(self, label):
+        s = "if-goto {}\n".format(label)
+        self._f.write(s)
         return
 
     def write_call(self, name, num_args):
         s = "call {} {}\n".format(name, str(num_args))
         self._f.write(s)
-        self._f.write("pop temp 0\n")
         return
 
     def write_function(self, name, num_locals):
