@@ -17,6 +17,6 @@ KIND_VM_MAP = {
     Kind.ARG: "argument",
     Kind.VAR: "local",
     Kind.STATIC: "static",
-    Kind.FIELD: "field",
+    Kind.FIELD: "this",
     Kind.NONE: "NONE"
 }

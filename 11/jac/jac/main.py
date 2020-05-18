@@ -21,11 +21,10 @@ def handle_input_file(args):
     in_name = os.path.basename(path)  # *.vm
     out_T_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + "T.xml")
     out_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + ".xml")
-    st_xml_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + "ST.xml")
     out_vm_path = "{}/output/{}".format(os.path.dirname(path), os.path.splitext(in_name)[0] + ".vm")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
-    output_xml(path, out_T_path, out_path, st_xml_path, out_vm_path, args.debug)
+    output_xml(path, out_T_path, out_path, out_vm_path, args.debug)
 
 
 def handle_input_dir(args):
@@ -37,20 +36,17 @@ def handle_input_dir(args):
     for path in jack_paths:
         out_T_path = "{}{}T.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
         out_path = "{}{}.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
-        st_xml_path = "{}{}ST.xml".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
         out_vm_path = "{}{}.vm".format(abs_out_dir_path, os.path.basename(os.path.splitext(path)[0]))
-        output_xml(path, out_T_path, out_path, st_xml_path, out_vm_path, args.debug)
+        output_xml(path, out_T_path, out_path, out_vm_path, args.debug)
     return
 
 
-def output_xml(jack_path, t_xml_path, c_xml_path, st_xml_path, vm_path, debug):
+def output_xml(jack_path, t_xml_path, c_xml_path, vm_path, debug):
     if debug:
-        print("{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n".format("input", jack_path,
-                                                                                    "output (tokenized)", t_xml_path,
-                                                                                    "output (parsed)", c_xml_path,
-                                                                                    "output (symbol table)",
-                                                                                    st_xml_path,
-                                                                                    "output (vm)", vm_path))
+        print("{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n{:<25}: {}\n".format("input", jack_path,
+                                                                        "output (tokenized)", t_xml_path,
+                                                                        "output (parsed)", c_xml_path,
+                                                                        "output (vm)", vm_path))
 
     # Chapter 10: Tokenizer
     f = open(t_xml_path, "w")
@@ -58,12 +54,8 @@ def output_xml(jack_path, t_xml_path, c_xml_path, st_xml_path, vm_path, debug):
     tokenize(t, f, False)
     f.close()
 
-    # Chapter 10: Compilation Engine
-    c = CompilationEngine(t_xml_path, c_xml_path)
-    c.compile_class()
-    c.close()
-
-    c = ExCompilationEngine(t_xml_path, st_xml_path, vm_path)
+    # Chapter 11: Expanded Compilation Engine
+    c = ExCompilationEngine(t_xml_path, c_xml_path, vm_path)
     c.compile_class()
     c.close()
 

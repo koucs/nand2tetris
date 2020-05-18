@@ -42,6 +42,7 @@ class ExCompilationEngine:
         self._subroutine_params_num = 0
         self._expression_num = 0
         self._var_dec_num = 0
+        self._class_dec_num = 0
         self._subroutine_name = ""
         self._if_count = 0
         self._while_count = 0
@@ -59,10 +60,12 @@ class ExCompilationEngine:
         self._output("keyword", "class")
         self._class_name = self._text()
 
-        self._output_identifier("class", 0, True)
+        self._output("identifier", None)
         self._output("symbol", "{")
+
         while self._text() in ["constructor", "function", "method", "static", "field"]:
             if self._text() in ["constructor", "function", "method"]:
+                self._subroutine_type = self._text()
                 self.compile_subroutine()
             elif self._text() in ["static", "field"]:
                 self.compile_class_var_dec()
@@ -76,7 +79,8 @@ class ExCompilationEngine:
         self._dump_xml("<classVarDec>")
         self._indent += 1
 
-        category = self._text()
+        category_kind = Kind.STATIC if self._text() == "static" else Kind.FIELD
+
         self._output("keyword", None)
 
         type = self._text()
@@ -85,16 +89,15 @@ class ExCompilationEngine:
         else:
             self._output("identifier", None)
 
-        if category == "static":
-            self._symbol_table.define(self._text(), type, Kind.STATIC)
-            self._output_identifier("static", self._symbol_table.index_of(self._text()), True)
-        else:
-            self._symbol_table.define(self._text(), type, Kind.FIELD)
-            self._output_identifier("field", self._symbol_table.index_of(self._text()), True)
+        self._symbol_table.define(self._text(), type, category_kind)
+        self._output("identifier", None)
+        self._class_dec_num += 1
 
         while self._text() == ",":
             self._output("symbol", ",")
+            self._symbol_table.define(self._text(), type, category_kind)
             self._output("identifier", None)
+            self._class_dec_num += 1
         self._output("symbol", ";")
 
         self._indent -= 1
@@ -139,7 +142,15 @@ class ExCompilationEngine:
         self._var_dec_num = 0
         while self._text() == "var":
             self.compile_var_dec()
+
         self._vm_writer.write_function("{}.{}".format(self._class_name, self._subroutine_name), self._var_dec_num)
+        if self._subroutine_type == "constructor":
+            self._vm_writer.write_push("constant", self._class_dec_num)
+            self._vm_writer.write_call("Memory.alloc", 1)
+            self._vm_writer.write_pop("pointer", 0)
+        elif self._subroutine_type == "method":
+            self._vm_writer.write_push("argument", 0)
+            self._vm_writer.write_pop("pointer", 0)
 
         self.compile_statements()
 
@@ -231,7 +242,6 @@ class ExCompilationEngine:
                 self.compile_let()
             elif self._text() == "while":
                 self.compile_while()
-                self._while_count += 1
             elif self._text() == "do":
                 self.compile_do()
             else:
@@ -257,9 +267,12 @@ class ExCompilationEngine:
     def compile_while(self):
         self._dump_xml("<whileStatement>")
         self._indent += 1
+        label_exp = "WHILE_EXP" + str(self._while_count)
+        label_end = "WHILE_END" + str(self._while_count)
+        self._while_count += 1
 
         self._output("keyword", "while")
-        self._vm_writer.write_label("WHILE_EXP" + str(self._while_count))
+        self._vm_writer.write_label(label_exp)
 
         self._output("symbol", "(")
         self.compile_expression()
@@ -267,7 +280,7 @@ class ExCompilationEngine:
         self._output("symbol", "{")
 
         self._vm_writer.write_arithmetic("not")
-        self._vm_writer.write_if("WHILE_END" + str(self._while_count))
+        self._vm_writer.write_if(label_end)
 
         self.compile_statements()
         self._output("symbol", "}")
@@ -275,8 +288,8 @@ class ExCompilationEngine:
         self._indent -= 1
         self._dump_xml("</whileStatement>")
 
-        self._vm_writer.write_goto("WHILE_EXP" + str(self._while_count))
-        self._vm_writer.write_label("WHILE_END" + str(self._while_count))
+        self._vm_writer.write_goto(label_exp)
+        self._vm_writer.write_label(label_end)
         return
 
     def compile_let(self):
@@ -323,9 +336,9 @@ class ExCompilationEngine:
         self._dump_xml("<ifStatement>")
         self._indent += 1
 
-        true_label = "IF_TRUE"+str(self._if_count)
-        false_label = "IF_FALSE"+str(self._if_count)
-        end_label = "IF_END"+str(self._if_count)
+        true_label = "IF_TRUE" + str(self._if_count)
+        false_label = "IF_FALSE" + str(self._if_count)
+        end_label = "IF_END" + str(self._if_count)
         # this count should be counted-up after making these labels immediately
         self._if_count += 1
 
@@ -341,19 +354,23 @@ class ExCompilationEngine:
         self._output("symbol", "{")
         self.compile_statements()
         self._output("symbol", "}")
-        self._vm_writer.write_goto(end_label)
 
         if self._text() == "else":
+            self._vm_writer.write_goto(end_label)
             self._vm_writer.write_label(false_label)
+
             self._output("keyword", "else")
             self._output("symbol", "{")
             self.compile_statements()
             self._output("symbol", "}")
 
+            self._vm_writer.write_label(end_label)
+        else:
+            self._vm_writer.write_label(false_label)
+
         self._indent -= 1
         self._dump_xml("</ifStatement>")
 
-        self._vm_writer.write_label(end_label)
         return
 
     def compile_expression(self):
@@ -375,6 +392,8 @@ class ExCompilationEngine:
                 command = "call Math.divide 2"
             elif self._text() == ">":
                 command = "gt"
+            elif self._text() == "<":
+                command = "lt"
             elif self._text() == "&":
                 command = "and"
             elif self._text() == "=":
@@ -406,6 +425,8 @@ class ExCompilationEngine:
                 self._vm_writer.write_arithmetic("not")
             elif self._text() == "false":
                 self._vm_writer.write_push("constant", 0)
+            elif self._text() == "this":
+                self._vm_writer.write_push("pointer", 0)
             self._output("keyword", None)
 
         elif self._tag() == "identifier":
@@ -446,15 +467,28 @@ class ExCompilationEngine:
         return
 
     def _compile_subroutine_call(self):
-        method = self._text()
 
-        self._output("identifier", None)
         self._expression_num = 0
 
+        method = self._text()
+
+        # The case of new method
+        if (self._symbol_table.kind_of(method) != Kind.NONE):
+            instance_name = method
+            method = self._symbol_table.type_of(method)
+            self._expression_num += 1
+            self._vm_writer.write_push(KIND_VM_MAP.get(self._symbol_table.kind_of(instance_name)),
+                                       self._symbol_table.index_of(instance_name))
+
+        self._output("identifier", None)
+
         if self._text() == "(":
+            method = self._class_name + "." + method
+            self._expression_num += 1
             self._output("symbol", "(")
             self.compile_expression_list()
             self._output("symbol", ")")
+            self._vm_writer.write_push("pointer", 0)
         elif self._text() == ".":
             self._output("symbol", ".")
             method += "." + self._text()
@@ -503,11 +537,6 @@ class ExCompilationEngine:
         e = self._element()
         if e.tag == "identifier":
             elem = ET.Element("identifier")
-            if self.ST_FLAG:
-                elem.attrib["category"] = category
-                elem.attrib["index"] = str(index)
-                elem.attrib["is_defined"] = str(is_defined)
-                elem.attrib["is_used"] = str(not is_defined)
             elem.text = " {} ".format(e.text)
             xml_str = ET.tostring(elem).decode()
             self._dump_xml(xml_str)
@@ -527,8 +556,3 @@ class ExCompilationEngine:
     def _advance(self):
         self._line_num += 1
         return
-
-    ST_FLAG = True
-
-    def set_st_flag(self, flag):
-        self.ST_FLAG = flag
