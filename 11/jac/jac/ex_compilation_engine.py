@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 from jac.symbol_table import SymbolTable
 from jac.constants import *
 from jac.vm_writer import VMWriter
+import re
 
 CLASS_VAR_DEC_KEYWORDS = ["static", "field"]
 PARAMETER_LIST_TYPE_KEYWORDS = ["void", "int", "char"]
@@ -298,12 +299,18 @@ class ExCompilationEngine:
 
         self._output("keyword", "let")
         let_identifier = self._text()
+        # if left-side var is array
+        array_flag = False
         self._output("identifier", None)
 
         if self._text() == "[":
             self._output("symbol", "[")
             self.compile_expression()
             self._output("symbol", "]")
+            self._vm_writer.write_push(KIND_VM_MAP.get(self._symbol_table.kind_of(let_identifier)),
+                                       self._symbol_table.index_of(let_identifier))
+            self._vm_writer.write_arithmetic("add")
+            array_flag = True
 
         self._output("symbol", "=")
         self.compile_expression()
@@ -312,8 +319,15 @@ class ExCompilationEngine:
         self._indent -= 1
         self._dump_xml("</letStatement>")
 
-        self._vm_writer.write_pop(KIND_VM_MAP.get(self._symbol_table.kind_of(let_identifier)),
-                                  self._symbol_table.index_of(let_identifier))
+        if not array_flag:
+            self._vm_writer.write_pop(KIND_VM_MAP.get(
+                self._symbol_table.kind_of(let_identifier)),
+                self._symbol_table.index_of(let_identifier))
+        else:
+            self._vm_writer.write_pop("temp", 0)
+            self._vm_writer.write_pop("pointer", 1)
+            self._vm_writer.write_push("temp", 0)
+            self._vm_writer.write_pop("that", 0)
         return
 
     def compile_return(self):
@@ -417,7 +431,7 @@ class ExCompilationEngine:
             self._output("integerConstant", None)
 
         elif self._tag() == "stringConstant":
-            self._output("stringConstant", None)
+            self._compile_string_constant()
 
         elif self._tag() == "keyword" and self._text() in ["true", "false", "this", "null"]:
             if self._text() == "true":
@@ -434,10 +448,16 @@ class ExCompilationEngine:
             next_element = self._root[self._line_num + 1]
 
             if next_element.text == "[":
+                identifier = self._text()
                 self._output("identifier", None)
                 self._output("symbol", "[")
                 self.compile_expression()
                 self._output("symbol", "]")
+                self._vm_writer.write_push(KIND_VM_MAP.get(self._symbol_table.kind_of(identifier)),
+                                           self._symbol_table.index_of(identifier))
+                self._vm_writer.write_arithmetic("add")
+                self._vm_writer.write_pop("pointer", 1)
+                self._vm_writer.write_push("that", 0)
 
             elif next_element.text in ["(", "."]:
                 self._compile_subroutine_call()
@@ -464,6 +484,17 @@ class ExCompilationEngine:
 
         self._indent -= 1
         self._dump_xml("</term>")
+        return
+
+    def _compile_string_constant(self):
+        string = self._text()
+        self._vm_writer.write_push("constant", len(string))
+        self._vm_writer.write_call("String.new", 1)
+        for elem in string:
+            # jack string is mapped to ASCII code table
+            self._vm_writer.write_push("constant", ord(elem))
+            self._vm_writer.write_call("String.appendChar", 2)
+        self._output("stringConstant", None)
         return
 
     def _compile_subroutine_call(self):
@@ -556,3 +587,7 @@ class ExCompilationEngine:
     def _advance(self):
         self._line_num += 1
         return
+
+    def _strip_text(self):
+        rm_head = re.sub(r'^\s', '', self._text())
+        return re.sub(r'\s$', '', rm_head)
