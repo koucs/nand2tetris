@@ -14,8 +14,8 @@
       <symbol> { </symbol>
       <varDec>
         <keyword> var </keyword>
-        <identifier> Array </identifier>
-        <identifier> a </identifier>
+        <identifier category="class" type="used" kind="" kind_index=""> Array </identifier>
+        <identifier category="class" type="defined" kind="var" kind_index="0"> a </identifier>
         <symbol> ; </symbol>
       </varDec>
       <varDec>
