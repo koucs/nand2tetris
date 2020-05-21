@@ -2,13 +2,6 @@
 
 ## Getting Started
 
-#### Preconditions
-
-${JackFIleBaseName}T.xml is **tokenizer.py** result.
-
-```shell script
-```
-
 #### Build
 
 ```shell script
@@ -22,22 +15,27 @@ Finished processing dependencies for jac==1.0.0
 #### Run
 
 ```shell script
-$ jac ../ArrayTest/Main.jack --debug
-
+$ jac ../ComplexArrays --debug
+input                    : /path/to/nand2tetris/projects/11/ComplexArrays/Main.jack
+output (tokenized)       : /path/to/nand2tetris/projects/11/ComplexArrays/output/MainT.xml
+output (parsed)          : /path/to/nand2tetris/projects/11/ComplexArrays/output/Main.xml
+output (vm)              : /path/to/nand2tetris/projects/11/ComplexArrays/output/Main.vm
 ```
 
-#### Confirm the output file
+#### Confirm the VM file
 
 ```shell script
-$ head ../ArrayTest/output/MainT.xml
+$ head /path/to/nand2tetris/projects/11/ComplexArrays/Main.jack
+
+function Main.main 3
+push constant 10
+call Array.new 1
+pop local 0
+push constant 5
+call Array.new 1
+pop local 1
+push constant 1
+call Array.new 1
+pop local 2
+
 ```
-
-
-#### Compare with correct tokenized XML files
-
-Successful examples.
-
-```shell script
-$ ./TextComparer.sh ../projects/10/ArrayTest/MainT.xml ../projects/10/ArrayTest/output/MainT.xml
-```
-
