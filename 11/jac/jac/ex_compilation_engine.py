@@ -453,6 +453,8 @@ class ExCompilationEngine:
                 self._vm_writer.write_push("constant", 0)
             elif self._text() == "this":
                 self._vm_writer.write_push("pointer", 0)
+            elif self._text() == "null":
+                self._vm_writer.write_push("constant", 0)
             self._output("keyword", None)
 
         elif self._tag() == "identifier":
