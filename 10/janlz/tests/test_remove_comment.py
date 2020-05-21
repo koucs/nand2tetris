@@ -84,3 +84,21 @@ def test4():
     assert len(line) == len(result)
     for l in result:
         assert l.strip() == ""
+
+
+def test5():
+    line = [
+        "    /**",
+        "     * Bounces off the current wall: sets the new destination",
+        "     * of the ball according to the ball's angle and the given",
+        "     * bouncing direction (-1/0/1=left/center/right or up/center/down).",
+        "     */"
+    ]
+
+    ## When
+    result = _remove_comment(line)
+
+    ## Then
+    assert len(line) == len(result)
+    for l in result:
+        assert l.strip() == ""

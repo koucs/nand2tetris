@@ -43,7 +43,8 @@ class ExCompilationEngine:
         self._subroutine_params_num = 0
         self._expression_num = 0
         self._var_dec_num = 0
-        self._class_dec_num = 0
+        self._class_dec_field_num = 0
+        self._class_dec_static_num = 0
         self._subroutine_name = ""
         self._if_count = 0
         self._while_count = 0
@@ -92,18 +93,24 @@ class ExCompilationEngine:
 
         self._symbol_table.define(self._text(), type, category_kind)
         self._output("identifier", None)
-        self._class_dec_num += 1
+        self._countup_class_dec_num(category_kind)
 
         while self._text() == ",":
             self._output("symbol", ",")
             self._symbol_table.define(self._text(), type, category_kind)
             self._output("identifier", None)
-            self._class_dec_num += 1
+            self._countup_class_dec_num(category_kind)
         self._output("symbol", ";")
 
         self._indent -= 1
         self._dump_xml("</classVarDec>")
         return
+
+    def _countup_class_dec_num(self, category_kind):
+        if category_kind is Kind.STATIC:
+            self._class_dec_static_num += 1
+        else:
+            self._class_dec_field_num += 1
 
     def compile_subroutine(self):
 
@@ -119,6 +126,9 @@ class ExCompilationEngine:
             self._output("identifier", None)
         # subroutine name
         self._subroutine_name = self._text()
+        if self._subroutine_type == "method":
+            self._symbol_table.define("this", self._class_name, Kind.ARG)
+
         self._output("identifier", None)
         self._output("symbol", "(")
 
@@ -146,7 +156,7 @@ class ExCompilationEngine:
 
         self._vm_writer.write_function("{}.{}".format(self._class_name, self._subroutine_name), self._var_dec_num)
         if self._subroutine_type == "constructor":
-            self._vm_writer.write_push("constant", self._class_dec_num)
+            self._vm_writer.write_push("constant", self._class_dec_field_num)
             self._vm_writer.write_call("Memory.alloc", 1)
             self._vm_writer.write_pop("pointer", 0)
         elif self._subroutine_type == "method":
@@ -412,6 +422,8 @@ class ExCompilationEngine:
                 command = "and"
             elif self._text() == "=":
                 command = "eq"
+            elif self._text() == "|":
+                command = "or"
 
             self._output("symbol", None)
             self.compile_term()
@@ -516,10 +528,10 @@ class ExCompilationEngine:
         if self._text() == "(":
             method = self._class_name + "." + method
             self._expression_num += 1
+            self._vm_writer.write_push("pointer", 0)
             self._output("symbol", "(")
             self.compile_expression_list()
             self._output("symbol", ")")
-            self._vm_writer.write_push("pointer", 0)
         elif self._text() == ".":
             self._output("symbol", ".")
             method += "." + self._text()
