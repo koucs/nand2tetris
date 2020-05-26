@@ -404,7 +404,7 @@ class ExCompilationEngine:
         command = None
 
         self.compile_term()
-        if self._text() in ["+", "-", "*", "/", "=", "&", "|", "<", ">"]:
+        while self._text() in ["+", "-", "*", "/", "=", "&", "|", "<", ">"]:
 
             if self._text() == "+":
                 command = "add"
@@ -428,7 +428,7 @@ class ExCompilationEngine:
             self._output("symbol", None)
             self.compile_term()
 
-        if command is not None: self._vm_writer.write_arithmetic(command)
+            if command is not None: self._vm_writer.write_arithmetic(command)
 
         self._indent -= 1
         self._dump_xml("</expression>")
