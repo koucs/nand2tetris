@@ -58,12 +58,12 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
-        var int neg_x, neg_y;
+        var int negX, negY;
         var int q;
         var int result;
 
-        let neg_x = x < 0;
-        let neg_y = y < 0;
+        let negX = x < 0;
+        let negY = y < 0;
         let x = Math.abs(x);
         let y = Math.abs(y);
 
@@ -79,7 +79,7 @@ class Math {
             let result = q+q+1;
         }
 
-        if( neg_x = neg_y ) {
+        if( negX = negY ) {
             return result;
         }
         else {
@@ -90,16 +90,15 @@ class Math {
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
         var int j, y;
-        var int approx;
-        var int approx_squared;
+        var int yTwo, yTwoSquared;
 
         let y = 0;
         let j = 7;
         while( ~(j < 0) ) {
-            let approx = y + twoToThe[j];
-            let approx_squared = approx * approx;
-            if( ~(approx_squared > x) & (approx_squared > 0) ) {
-                let y = approx;
+            let yTwo = y + twoToThe[j];
+            let yTwoSquared = yTwo * yTwo;
+            if( ~(yTwoSquared > x) & (yTwoSquared > 0) ) {
+                let y = yTwo;
             }
             let j = j - 1;
         }

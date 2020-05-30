@@ -543,6 +543,7 @@ class ExCompilationEngine:
             self._output("symbol", ")")
 
         self._vm_writer.write_call(method, self._expression_num)
+        self._expression_num = 0
         return
 
     def compile_expression_list(self):

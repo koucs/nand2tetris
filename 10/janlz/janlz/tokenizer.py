@@ -2,7 +2,7 @@ import re
 from janlz.constants import Token, KEYWORD_LOOKUP_MAP
 
 KEYWORD_REX = re.compile(
-    r'^(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do\s|if|else|while|return)')
+    r'^(class|constructor|function|method|field|static|var|int\s|char\s|boolean|void|true|false|null|this|let|do\s|if|else|while|return)')
 SYMBOL_REX = re.compile(r'^([{}()\[\]_.,;+\-*\/&|<>=~])')
 IDENTIFIER_REX = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)')
 INT_CONSTANT_REX = re.compile(r'^(\d{1,5})')

@@ -12,53 +12,139 @@
  */
 class String {
 
+    field Array str;
+    field int currentLength;
+    field int maximumLength;
+
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
+        if( maxLength = 0 ) {
+            let maxLength = 1;
+        }
+        let str = Array.new(maxLength);
+        let currentLength = 0;
+        let maximumLength = maxLength;
+        return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
+        do str.dispose();
+        return;
     }
 
     /** Returns the current length of this string. */
     method int length() {
+        return currentLength;
     }
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
+        return str[j];
     }
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
+        let str[j] = c;
+        return;
     }
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
+        if(currentLength < maximumLength){
+            let str[currentLength] = c;
+            let currentLength = currentLength + 1;
+        }
+        return this;
     }
 
     /** Erases the last character from this string. */
     method void eraseLastChar() {
+        if (currentLength > 0){
+            let currentLength = currentLength - 1;
+        }
+        return this;
     }
 
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
+        var boolean isNeg;
+        var int val, i;
+        let val = 0;
+
+        let isNeg = false;
+        let i = 0;
+        if( (currentLength > 0) & (str[0] = 45)) {
+            let isNeg = true;
+            let i = 1;
+        }
+
+        while( (i < currentLength) & String.isDigit(str[i]) ) {
+            let val = (val * 10) + str[i] - 48;
+            let i = i + 1;
+        }
+
+        if (isNeg) {
+            return val * -1;
+        } 
+        else {
+            return val;
+        }
+
+    }
+
+    function boolean isDigit(char c){
+        return ~(c < 48) & ~(c > 57);
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
+        // clear string
+        let currentLength = 0;
+
+        // int to string
+        if (val < 0){
+            let val = -1 * val;
+            // append "-" string
+            do appendChar(45);
+        }
+        do int2String(val);
+        return;
+    }
+
+    method void int2String(int val){
+        var int lastDigit, q;
+        var char c;
+
+        let q = val / 10;
+        let lastDigit = val - (q * 10);
+
+        // convert integer (must have 0<=value<=9) *
+        let c = lastDigit + 48;
+        if (val < 10){
+            do appendChar(c);
+        }
+        else {
+            do int2String(q);
+            do appendChar(c);
+        }
+        return;
     }
 
     /** Returns the new line character. */
     function char newLine() {
+        return 128;
     }
 
     /** Returns the backspace character. */
     function char backSpace() {
+        return 129;
     }
 
     /** Returns the double quote (") character. */
     function char doubleQuote() {
+        return 34;
     }
 }
