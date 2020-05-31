@@ -10,25 +10,77 @@
  */ 
 class Memory {
 
+    static Array ram, heap, freeList;
+    static int HEAP_BASE, IDX_NEXT, IDX_SIZE, END_BLOCK;
+
     /** Initializes the class. */
     function void init() {
+        let HEAP_BASE = 2048;
+        let END_BLOCK = 16384;
+
+        let ram = 0;
+        let heap = HEAP_BASE;
+        let freeList = HEAP_BASE;
+
+        // Next free block pointer
+        let IDX_NEXT = 0;
+        let heap[IDX_NEXT] = 0;
+
+        // Free block size including 2 header words
+        let IDX_SIZE = 1;
+        let heap[IDX_SIZE] = END_BLOCK - HEAP_BASE;
+
+        return;
     }
 
     /** Returns the RAM value at the given address. */
-    function int peek(int address) {
+    function int peek(int address) {        
+        return ram[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
     }
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
+
+        var Array prev_blk, crnt_blk, best_blk, new_free_blk;
+        var int crnt_size, best_size;
+
+        let crnt_blk = freeList;
+        let prev_blk = null;
+        let new_free_blk = null;
+
+        while ( crnt_blk[IDX_SIZE] < size ){
+            let prev_blk = crnt_blk;
+            let crnt_blk = crnt_blk[IDX_NEXT];
+        }
+
+        // offset = 2 (IDX_NEXT, IDX_SIZE)
+        let best_blk = crnt_blk + 2;
+        let new_free_blk = best_blk + size;
+
+        let prev_blk[IDX_NEXT] = new_free_blk;
+        let new_free_blk[IDX_NEXT] = crnt_blk[IDX_NEXT];
+        let new_free_blk[IDX_SIZE] = crnt_blk[IDX_SIZE] - size - 2;
+        let freeList = new_free_blk;
+
+        // set next and size
+        let ram[best_blk - 2] = 0;
+        let ram[best_blk - 1] = size;
+        return best_blk;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
+        // freeList (first) -> o -> freeList (second)
+        let heap[o - 2] = freeList[IDX_NEXT];
+        let freeList[IDX_NEXT] = o;
+        return;
     }    
 }
