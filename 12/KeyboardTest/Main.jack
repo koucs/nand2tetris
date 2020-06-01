@@ -17,6 +17,7 @@ class Main {
         do Output.printString("keyPressed test:");
         do Output.println();
         while (~ok) {
+            // Mac OS: Page Down -> Fn + ↓
             do Output.printString("Please press the 'Page Down' key");
             while (key = 0) {
                 let key = Keyboard.keyPressed();
