@@ -10,10 +10,10 @@ class Token(Enum):
 
 
 ESCAPED_SYMBOL = {
+    "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    "\"": "&quote;",
-    "&": "&amp;"
+    "\"": "&quote;"
 }
 
 

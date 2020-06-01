@@ -16,19 +16,27 @@ class Screen {
     // 16384 (0x4000) ~ 24575 (0x5FFF)
     // (0 <= c <= 511) (0 <= r <= 255)
     static Array SCREEN;
-    static int WHITE_PIXEL, BLACK_PIXEL;
     static boolean WHITE, BLACK;
     static boolean COLOR;
+
+    static Array TWO_TO_THE;
 
     /** Initializes the Screen. */
     function void init() {
         var int i;
         let SCREEN = 16384;
-        let WHITE_PIXEL = 0;
-        let BLACK_PIXEL = 1;
         let BLACK = true;
         let WHITE = false;
         let COLOR = BLACK;
+
+        let TWO_TO_THE = Array.new(16);
+        let TWO_TO_THE[0] = 1;
+        let i = 1;
+        while (i < 16) {
+            let TWO_TO_THE[i] = TWO_TO_THE[i-1] + TWO_TO_THE[i-1];
+            let i = i + 1;
+        }
+
         return;
     }
 
@@ -54,14 +62,9 @@ class Screen {
     function void drawPixel(int x, int y) {
 		var int q, mod, mask, address;
 		let q = x / 16;
-		let mask = 1;
 		let mod = x - (q * 16);
 		let address = (y * 32) + q;
-
-		while(mod > 0){
-			let mask = mask * 2;
-			let mod = mod - 1;
-		}
+        let mask = TWO_TO_THE[mod];
 
 		if(COLOR){
 			let SCREEN[address] = SCREEN[address] | mask;
@@ -140,7 +143,7 @@ class Screen {
         var int fromY, toY;
         let fromY = Math.min(y1, y2);
         let toY = Math.max(y1, y2);
-        while (~(fromY > toY)) {
+        while ( ~(fromY > toY) ) {
             do Screen.drawLine(x1, fromY, x2, fromY);
             let fromY = fromY + 1;
         }

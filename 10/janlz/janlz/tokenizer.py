@@ -1,5 +1,5 @@
 import re
-from janlz.constants import Token, KEYWORD_LOOKUP_MAP
+from janlz.constants import Token, KEYWORD_LOOKUP_MAP, ESCAPED_SYMBOL
 
 KEYWORD_REX = re.compile(
     r'^(class|constructor|function|method|field|static|var|int\s|char\s|boolean|void|true|false|null|this|let|do\s|if|else|while|return)')
@@ -158,7 +158,9 @@ class Tokenizer:
             elif token_type is Token.INT_CONST:
                 self._int_val = _parse_4digit_number(result.group(1))
             elif token_type is Token.STRING_CONST:
-                self._string_val = result.group(1)
+                replaced_str = result.group(1)
+                for k, v in ESCAPED_SYMBOL.items(): replaced_str = replaced_str.replace(k, v)
+                self._string_val = replaced_str
 
             return re.sub(rex, '', line)
         else:
