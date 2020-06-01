@@ -1,8 +1,8 @@
 import re
-from janlz.constants import Token, KEYWORD_LOOKUP_MAP
+from janlz.constants import Token, KEYWORD_LOOKUP_MAP, ESCAPED_SYMBOL
 
 KEYWORD_REX = re.compile(
-    r'^(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do\s|if|else|while|return)')
+    r'^(class|constructor|function|method|field|static|var|int\s|char\s|boolean|void|true|false|null|this|let|do\s|if|else|while|return)')
 SYMBOL_REX = re.compile(r'^([{}()\[\]_.,;+\-*\/&|<>=~])')
 IDENTIFIER_REX = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)')
 INT_CONSTANT_REX = re.compile(r'^(\d{1,5})')
@@ -39,7 +39,7 @@ def _remove_comment(lines):
     lines = [re.sub(ONE_LINE_COMMENT_REX, '', l) for l in lines]
 
     # Case 3
-    MULTI_LINES_COMMENT_REX_START = re.compile(r'^(\s*\/\*\*\s*[^\/]*[\*\/]*)$')
+    MULTI_LINES_COMMENT_REX_START = re.compile(r'^(\s*\/\*\*\s*.*[\*\/]*)$')
     MULTI_LINES_COMMENT_REX_MID = re.compile(r'^(\s*\*.*)$')
     MULTI_LINES_COMMENT_REX_END = re.compile(r'^(\s*\*\/)$')
     for i, line in enumerate(lines):
@@ -158,7 +158,9 @@ class Tokenizer:
             elif token_type is Token.INT_CONST:
                 self._int_val = _parse_4digit_number(result.group(1))
             elif token_type is Token.STRING_CONST:
-                self._string_val = result.group(1)
+                replaced_str = result.group(1)
+                for k, v in ESCAPED_SYMBOL.items(): replaced_str = replaced_str.replace(k, v)
+                self._string_val = replaced_str
 
             return re.sub(rex, '', line)
         else:
